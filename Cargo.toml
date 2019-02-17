@@ -1,0 +1,8 @@
+[package]
+name = "zalgo"
+version = "0.1.0"
+authors = ["adumbidiot <nathaniel.daniel23@outlook.com>"]
+edition = "2018"
+
+[dependencies]
+rand = "0.6"
