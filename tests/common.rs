@@ -6,7 +6,9 @@ use zalgo::{
 
 #[test]
 fn zalgoify() {
-    println!("{}", zalgo::zalgoify("Hello World!"));
+    let ret = zalgo::zalgoify("Hello World!");
+    println!("{}", ret);
+    assert!(!ret.is_empty());
 }
 
 #[test]
@@ -16,7 +18,10 @@ fn zalgoify_struct() {
     zalgoifier.set_down(RandOrStatic::Static(0));
     zalgoifier.set_mid(RandOrStatic::Static(0));
 
-    println!("{}", zalgoifier.zalgoify("Hello World!"));
+    let ret = zalgoifier.zalgoify("Hello World!");
+
+    println!("{}", ret);
+    assert!(!ret.is_empty());
 }
 
 #[test]

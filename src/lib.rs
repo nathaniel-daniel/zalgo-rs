@@ -90,6 +90,12 @@ impl Zalgoifier {
     }
 }
 
+impl Default for Zalgoifier {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 #[derive(Debug, Clone)]
 pub enum RandOrStatic {
     Rand(usize),
