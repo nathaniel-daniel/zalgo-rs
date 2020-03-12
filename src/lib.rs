@@ -1,5 +1,3 @@
-extern crate rand;
-
 pub mod chars;
 
 use rand::{
@@ -65,23 +63,25 @@ impl Zalgoifier {
     }
 
     pub fn zalgoify(&mut self, input: &str) -> String {
-        // TODO: Cow
-        let mut ret = String::new();
-        for c in input.chars() {
-            if is_zalgo_char(c) {
-                continue;
-            }
+        let up_num = self.get_num(self.up);
+        let mid_num = self.get_num(self.mid);
+        let down_num = self.get_num(self.down);
 
+        // TODO: This is in bytes. I should probably find the avergae length of a zalgo char and multiply it here.
+        let cap = input.len() * up_num + input.len() * mid_num + input.len() * down_num;
+
+        let mut ret = String::with_capacity(cap);
+        for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
             ret.push(c);
-            for _ in 0..self.get_num(self.up.clone()) {
+            for _ in 0..up_num {
                 ret.push(self.get_rand_char(ZalgoType::Up));
             }
 
-            for _ in 0..self.get_num(self.mid.clone()) {
+            for _ in 0..mid_num {
                 ret.push(self.get_rand_char(ZalgoType::Mid));
             }
 
-            for _ in 0..self.get_num(self.down.clone()) {
+            for _ in 0..down_num {
                 ret.push(self.get_rand_char(ZalgoType::Down));
             }
         }
@@ -96,13 +96,13 @@ impl Default for Zalgoifier {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RandOrStatic {
     Rand(usize),
     Static(usize),
 }
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum ZalgoType {
     Up,
     Down,
@@ -110,7 +110,7 @@ pub enum ZalgoType {
 }
 
 impl ZalgoType {
-    pub fn get_char_array(&self) -> &'static [char] {
+    pub fn get_char_array(self) -> &'static [char] {
         match self {
             ZalgoType::Up => chars::ZALGO_UP,
             ZalgoType::Down => chars::ZALGO_DOWN,
