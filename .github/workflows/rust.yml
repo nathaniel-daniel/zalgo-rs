@@ -47,4 +47,4 @@ jobs:
       - name: Build
         run: cargo build --verbose
       - name: Run Tests
-        run: cargo test --all --verbose --features wasm-bindgen-support
+        run: cargo test --all --verbose
