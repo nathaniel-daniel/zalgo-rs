@@ -48,7 +48,7 @@ impl Zalgoifier {
     }
 
     pub fn get_rand(&mut self, max: usize) -> usize {
-        self.rng.gen_range(0, max)
+        self.rng.gen_range(0..max)
     }
 
     pub fn get_rand_char(&mut self, zalgo_type: ZalgoType) -> char {
