@@ -1,10 +1,93 @@
+/// zalgo chars
 mod chars;
 
+/// [`RandOrStatic`] type
+mod rand_or_static;
+
+pub use self::rand_or_static::RandOrStatic;
 use rand::{
-    rngs::ThreadRng,
     seq::SliceRandom,
     Rng,
 };
+
+/// A builder for a zalgoifier
+#[derive(Debug)]
+pub struct ZalgoBuilder {
+    /// The up limit
+    pub up: RandOrStatic,
+
+    /// The down limit
+    pub down: RandOrStatic,
+
+    /// The mid limit
+    pub mid: RandOrStatic,
+}
+
+impl ZalgoBuilder {
+    /// Make a new [`ZalgoBuilder`].
+    pub fn new() -> Self {
+        Self {
+            up: RandOrStatic::Rand { start: 0, end: 8 },
+            down: RandOrStatic::Rand { start: 0, end: 2 },
+            mid: RandOrStatic::Rand { start: 0, end: 8 },
+        }
+    }
+
+    /// Set the up limits
+    pub fn set_up(&mut self, up: RandOrStatic) -> &mut Self {
+        self.up = up;
+        self
+    }
+
+    /// Set the down limits
+    pub fn set_down(&mut self, down: RandOrStatic) -> &mut Self {
+        self.down = down;
+        self
+    }
+
+    /// Set the mid limits
+    pub fn set_mid(&mut self, mid: RandOrStatic) -> &mut Self {
+        self.mid = mid;
+        self
+    }
+
+    /// Zalgoify a string
+    pub fn zalgoify(&self, input: &str) -> String {
+        let mut rng = rand::thread_rng();
+        let up_num = self.up.generate_num(&mut rng);
+        let mid_num = self.mid.generate_num(&mut rng);
+        let down_num = self.down.generate_num(&mut rng);
+
+        // Assuming average char len is 2 bytes (TODO: Check this).
+        let input_len = input.len();
+        let estimated_len =
+            (input_len * up_num * 2) + (input_len * mid_num * 2) + (input_len * down_num * 2);
+
+        let mut ret = String::with_capacity(estimated_len);
+        for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
+            ret.push(c);
+            for _ in 0..up_num {
+                ret.push(get_rand_char(&mut rng, ZalgoType::Up));
+            }
+
+            for _ in 0..mid_num {
+                ret.push(get_rand_char(&mut rng, ZalgoType::Mid));
+            }
+
+            for _ in 0..down_num {
+                ret.push(get_rand_char(&mut rng, ZalgoType::Down));
+            }
+        }
+
+        ret
+    }
+}
+
+impl Default for ZalgoBuilder {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 
 /// Check if a given char is a zalgo char.
 fn is_zalgo_char(c: char) -> bool {
@@ -15,94 +98,20 @@ fn is_zalgo_char(c: char) -> bool {
         .any(|&el| el == c)
 }
 
+/// Get a random char of the given type.
+fn get_rand_char<R>(rng: &mut R, zalgo_type: ZalgoType) -> char
+where
+    R: Rng,
+{
+    *zalgo_type
+        .get_char_array()
+        .choose(rng)
+        .expect("zalgo char array is empty")
+}
+
 /// Zalgoify the input using default settings
 pub fn zalgoify(input: &str) -> String {
-    Zalgoifier::new().zalgoify(input)
-}
-
-pub struct Zalgoifier {
-    rng: ThreadRng,
-    up: RandOrStatic,
-    down: RandOrStatic,
-    mid: RandOrStatic,
-}
-
-impl Zalgoifier {
-    pub fn new() -> Self {
-        Zalgoifier {
-            rng: rand::thread_rng(),
-            up: RandOrStatic::Rand(8),
-            down: RandOrStatic::Rand(2),
-            mid: RandOrStatic::Rand(8),
-        }
-    }
-
-    pub fn set_up(&mut self, up: RandOrStatic) {
-        self.up = up;
-    }
-
-    pub fn set_down(&mut self, down: RandOrStatic) {
-        self.down = down;
-    }
-
-    pub fn set_mid(&mut self, mid: RandOrStatic) {
-        self.mid = mid;
-    }
-
-    pub fn get_rand(&mut self, max: usize) -> usize {
-        self.rng.gen_range(0..max)
-    }
-
-    fn get_rand_char(&mut self, zalgo_type: ZalgoType) -> char {
-        *zalgo_type.get_char_array().choose(&mut self.rng).unwrap()
-    }
-
-    pub fn get_num(&mut self, val: RandOrStatic) -> usize {
-        match val {
-            RandOrStatic::Rand(n) => self.get_rand(n),
-            RandOrStatic::Static(n) => n,
-        }
-    }
-
-    pub fn zalgoify(&mut self, input: &str) -> String {
-        let up_num = self.get_num(self.up);
-        let mid_num = self.get_num(self.mid);
-        let down_num = self.get_num(self.down);
-
-        // TODO: This is in bytes. I should probably find the avergae length of a zalgo char and multiply it here.
-        let cap = input.len() * up_num + input.len() * mid_num + input.len() * down_num;
-
-        let mut ret = String::with_capacity(cap);
-        for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
-            ret.push(c);
-            for _ in 0..up_num {
-                ret.push(self.get_rand_char(ZalgoType::Up));
-            }
-
-            for _ in 0..mid_num {
-                ret.push(self.get_rand_char(ZalgoType::Mid));
-            }
-
-            for _ in 0..down_num {
-                ret.push(self.get_rand_char(ZalgoType::Down));
-            }
-        }
-
-        ret
-    }
-}
-
-impl Default for Zalgoifier {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-/// A random value or a static value
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RandOrStatic {
-    Rand(usize),
-    Static(usize),
+    ZalgoBuilder::new().zalgoify(input)
 }
 
 /// The type of zalgo char
@@ -121,5 +130,43 @@ impl ZalgoType {
             ZalgoType::Down => chars::ZALGO_DOWN,
             ZalgoType::Mid => chars::ZALGO_MID,
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn basic_zalgoify_works() {
+        let ret = zalgoify("Hello World!");
+        println!("{}", ret);
+        assert!(!ret.is_empty());
+    }
+
+    #[test]
+    fn zalgoify_builder_works() {
+        let mut zalgo_builder = ZalgoBuilder::new();
+        zalgo_builder
+            .set_up(RandOrStatic::Rand { start: 0, end: 100 })
+            .set_down(RandOrStatic::Static { value: 0 })
+            .set_mid(RandOrStatic::Static { value: 0 });
+
+        let ret = zalgo_builder.zalgoify("Hello World!");
+
+        println!("{}", ret);
+        assert!(!ret.is_empty());
+    }
+
+    #[test]
+    fn zalgo_noop_works() {
+        let mut zalgo_builder = ZalgoBuilder::new();
+        zalgo_builder
+            .set_up(RandOrStatic::Static { value: 0 })
+            .set_down(RandOrStatic::Static { value: 0 })
+            .set_mid(RandOrStatic::Static { value: 0 });
+
+        let test = "Hello World!";
+        assert_eq!(test, zalgo_builder.zalgoify("Hello World!"));
     }
 }
