@@ -5,10 +5,7 @@ mod chars;
 mod rand_or_static;
 
 pub use self::rand_or_static::RandOrStatic;
-use rand::{
-    seq::SliceRandom,
-    Rng,
-};
+use rand::seq::SliceRandom;
 
 /// A builder for a zalgoifier
 #[derive(Debug)]
@@ -34,20 +31,23 @@ impl ZalgoBuilder {
     }
 
     /// Set the up limits
-    pub fn set_up(&mut self, up: RandOrStatic) -> &mut Self {
-        self.up = up;
+    #[inline]
+    pub fn set_up(&mut self, up: impl Into<RandOrStatic>) -> &mut Self {
+        self.up = up.into();
         self
     }
 
     /// Set the down limits
-    pub fn set_down(&mut self, down: RandOrStatic) -> &mut Self {
-        self.down = down;
+    #[inline]
+    pub fn set_down(&mut self, down: impl Into<RandOrStatic>) -> &mut Self {
+        self.down = down.into();
         self
     }
 
     /// Set the mid limits
-    pub fn set_mid(&mut self, mid: RandOrStatic) -> &mut Self {
-        self.mid = mid;
+    #[inline]
+    pub fn set_mid(&mut self, mid: impl Into<RandOrStatic>) -> &mut Self {
+        self.mid = mid.into();
         self
     }
 
@@ -67,15 +67,24 @@ impl ZalgoBuilder {
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
             ret.push(c);
             for _ in 0..up_num {
-                ret.push(get_rand_char(&mut rng, ZalgoType::Up));
+                let c = *self::chars::ZALGO_UP
+                    .choose(&mut rng)
+                    .expect("`ZALGO_UP` is empty");
+                ret.push(c);
             }
 
             for _ in 0..mid_num {
-                ret.push(get_rand_char(&mut rng, ZalgoType::Mid));
+                let c = *self::chars::ZALGO_MID
+                    .choose(&mut rng)
+                    .expect("`ZALGO_MID` is empty");
+                ret.push(c);
             }
 
             for _ in 0..down_num {
-                ret.push(get_rand_char(&mut rng, ZalgoType::Down));
+                let c = *self::chars::ZALGO_DOWN
+                    .choose(&mut rng)
+                    .expect("`ZALGO_DOWN` is empty");
+                ret.push(c);
             }
         }
 
@@ -98,39 +107,9 @@ fn is_zalgo_char(c: char) -> bool {
         .any(|&el| el == c)
 }
 
-/// Get a random char of the given type.
-fn get_rand_char<R>(rng: &mut R, zalgo_type: ZalgoType) -> char
-where
-    R: Rng,
-{
-    *zalgo_type
-        .get_char_array()
-        .choose(rng)
-        .expect("zalgo char array is empty")
-}
-
-/// Zalgoify the input using default settings
+/// Zalgoify the input using default settings.
 pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
-}
-
-/// The type of zalgo char
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum ZalgoType {
-    Up,
-    Down,
-    Mid,
-}
-
-impl ZalgoType {
-    /// Get the char array for the given zalgo type.
-    fn get_char_array(self) -> &'static [char] {
-        match self {
-            ZalgoType::Up => chars::ZALGO_UP,
-            ZalgoType::Down => chars::ZALGO_DOWN,
-            ZalgoType::Mid => chars::ZALGO_MID,
-        }
-    }
 }
 
 #[cfg(test)]
@@ -147,10 +126,7 @@ mod test {
     #[test]
     fn zalgoify_builder_works() {
         let mut zalgo_builder = ZalgoBuilder::new();
-        zalgo_builder
-            .set_up(RandOrStatic::Rand { start: 0, end: 100 })
-            .set_down(RandOrStatic::Static { value: 0 })
-            .set_mid(RandOrStatic::Static { value: 0 });
+        zalgo_builder.set_up(0..100).set_down(0).set_mid(0);
 
         let ret = zalgo_builder.zalgoify("Hello World!");
 
@@ -161,10 +137,7 @@ mod test {
     #[test]
     fn zalgo_noop_works() {
         let mut zalgo_builder = ZalgoBuilder::new();
-        zalgo_builder
-            .set_up(RandOrStatic::Static { value: 0 })
-            .set_down(RandOrStatic::Static { value: 0 })
-            .set_mid(RandOrStatic::Static { value: 0 });
+        zalgo_builder.set_up(0).set_down(0).set_mid(0);
 
         let test = "Hello World!";
         assert_eq!(test, zalgo_builder.zalgoify("Hello World!"));

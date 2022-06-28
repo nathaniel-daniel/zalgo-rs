@@ -1,4 +1,5 @@
-pub const ZALGO_UP: &[char] = &[
+/// Up zalgo chars
+pub(crate) const ZALGO_UP: &[char] = &[
     '\u{030d}', // ̍
     '\u{030e}', // ̎
     '\u{0304}', // ̄
@@ -51,7 +52,8 @@ pub const ZALGO_UP: &[char] = &[
     '\u{031a}', // ̚
 ];
 
-pub const ZALGO_DOWN: &[char] = &[
+/// Down zalgo chars
+pub(crate) const ZALGO_DOWN: &[char] = &[
     '\u{0316}', // ̖
     '\u{0317}', // ̗
     '\u{0318}', // ̘
@@ -94,7 +96,8 @@ pub const ZALGO_DOWN: &[char] = &[
     '\u{0323}', // ̣
 ];
 
-pub const ZALGO_MID: &[char] = &[
+/// Mid zalgo chars
+pub(crate) const ZALGO_MID: &[char] = &[
     '\u{0315}', // ̕
     '\u{031b}', // ̛
     '\u{0340}', // ̀
