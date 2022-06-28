@@ -1,4 +1,4 @@
-pub mod chars;
+mod chars;
 
 use rand::{
     rngs::ThreadRng,
@@ -6,14 +6,16 @@ use rand::{
     Rng,
 };
 
-pub fn is_zalgo_char(c: char) -> bool {
-    chars::ZALGO_UP
+/// Check if a given char is a zalgo char.
+fn is_zalgo_char(c: char) -> bool {
+    crate::chars::ZALGO_UP
         .iter()
         .chain(chars::ZALGO_DOWN.iter())
         .chain(chars::ZALGO_MID.iter())
         .any(|&el| el == c)
 }
 
+/// Zalgoify the input using default settings
 pub fn zalgoify(input: &str) -> String {
     Zalgoifier::new().zalgoify(input)
 }
@@ -51,7 +53,7 @@ impl Zalgoifier {
         self.rng.gen_range(0..max)
     }
 
-    pub fn get_rand_char(&mut self, zalgo_type: ZalgoType) -> char {
+    fn get_rand_char(&mut self, zalgo_type: ZalgoType) -> char {
         *zalgo_type.get_char_array().choose(&mut self.rng).unwrap()
     }
 
@@ -96,21 +98,24 @@ impl Default for Zalgoifier {
     }
 }
 
+/// A random value or a static value
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum RandOrStatic {
     Rand(usize),
     Static(usize),
 }
 
+/// The type of zalgo char
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-pub enum ZalgoType {
+enum ZalgoType {
     Up,
     Down,
     Mid,
 }
 
 impl ZalgoType {
-    pub fn get_char_array(self) -> &'static [char] {
+    /// Get the char array for the given zalgo type.
+    fn get_char_array(self) -> &'static [char] {
         match self {
             ZalgoType::Up => chars::ZALGO_UP,
             ZalgoType::Down => chars::ZALGO_DOWN,
