@@ -4,12 +4,12 @@ mod chars;
 /// [`RandOrStatic`] type
 mod rand_or_static;
 
+use self::chars::is_zalgo_char;
 pub use self::rand_or_static::RandOrStatic;
 use rand::{
     seq::SliceRandom,
     SeedableRng,
 };
-use self::chars::is_zalgo_char;
 
 /// A builder for a zalgoifier
 #[derive(Debug)]
