@@ -5,7 +5,11 @@ mod chars;
 mod rand_or_static;
 
 pub use self::rand_or_static::RandOrStatic;
-use rand::seq::SliceRandom;
+use rand::{
+    seq::SliceRandom,
+    SeedableRng,
+};
+use self::chars::is_zalgo_char;
 
 /// A builder for a zalgoifier
 #[derive(Debug)]
@@ -53,7 +57,7 @@ impl ZalgoBuilder {
 
     /// Zalgoify a string
     pub fn zalgoify(&self, input: &str) -> String {
-        let mut rng = rand::thread_rng();
+        let mut rng = rand::rngs::SmallRng::from_entropy();
         let up_num = self.up.generate_num(&mut rng);
         let mid_num = self.mid.generate_num(&mut rng);
         let down_num = self.down.generate_num(&mut rng);
@@ -98,15 +102,6 @@ impl Default for ZalgoBuilder {
     }
 }
 
-/// Check if a given char is a zalgo char.
-fn is_zalgo_char(c: char) -> bool {
-    crate::chars::ZALGO_UP
-        .iter()
-        .chain(chars::ZALGO_DOWN.iter())
-        .chain(chars::ZALGO_MID.iter())
-        .any(|&el| el == c)
-}
-
 /// Zalgoify the input using default settings.
 pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
@@ -115,6 +110,26 @@ pub fn zalgoify(input: &str) -> String {
 #[cfg(test)]
 mod test {
     use super::*;
+    use std::time::Instant;
+
+    /// Check if a given char is a zalgo char.
+    ///
+    /// This is an old impl
+    fn is_zalgo_char_version_2(c: char) -> bool {
+        if crate::chars::ZALGO_UP.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        if crate::chars::ZALGO_DOWN.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        if crate::chars::ZALGO_MID.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        false
+    }
 
     #[test]
     fn basic_zalgoify_works() {
@@ -141,5 +156,33 @@ mod test {
 
         let test = "Hello World!";
         assert_eq!(test, zalgo_builder.zalgoify("Hello World!"));
+    }
+
+    #[test]
+    fn zalgo_bench() {
+        let data = "Hello World!".repeat(12);
+
+        let start = Instant::now();
+        zalgoify(&data);
+        let elapsed = start.elapsed();
+        println!("Time: {:?}", elapsed);
+    }
+
+    #[test]
+    fn test_is_zalgo_char() {
+        for i in 0..u32::MAX {
+            if let Ok(c) = char::try_from(i) {
+                let is_zalgo_char_version_2_result = is_zalgo_char_version_2(c);
+                let is_zalgo_char_result = is_zalgo_char(c);
+                assert!(
+                    is_zalgo_char_version_2_result == is_zalgo_char_result,
+                    "failed on {:x?} ({:b}), expected {}, got {}",
+                    c,
+                    u32::from(c),
+                    is_zalgo_char_version_2_result,
+                    is_zalgo_char_result,
+                );
+            }
+        }
     }
 }
