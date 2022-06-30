@@ -1,3 +1,5 @@
+#![cfg_attr(feature="no-unsafe", forbid(unsafe_code))]
+
 /// zalgo chars
 mod chars;
 
@@ -113,6 +115,7 @@ pub fn zalgoify(input: &str) -> String {
 /// Push a char to a String using a buffer to encode utf8.
 ///
 /// This is much faster for multi-byte chars (like zalgo chars) than `push`.
+#[cfg(not(feature = "no-unsafe"))]
 #[inline]
 fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
     unsafe {
@@ -126,10 +129,11 @@ fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
 // Push a char to a String using a buffer to encode utf8.
 //
 // This is much faster for multi-byte chars (like zalgo chars) than `push`.
-// #[inline]
-// fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
-// string.push_str(c.encode_utf8(buf));
-// }
+#[cfg(feature = "no-unsafe")]
+#[inline]
+fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
+string.push_str(c.encode_utf8(buf));
+}
 
 #[cfg(test)]
 mod test {
