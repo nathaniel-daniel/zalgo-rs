@@ -72,7 +72,7 @@ impl ZalgoBuilder {
         let mut ret = String::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
             ret.push(c);
-            
+
             for _ in 0..up_num {
                 let c = *self::chars::ZALGO_UP
                     .choose(&mut rng)
@@ -111,10 +111,25 @@ pub fn zalgoify(input: &str) -> String {
 }
 
 /// Push a char to a String using a buffer to encode utf8.
+///
+/// This is much faster for multi-byte chars (like zalgo chars) than `push`.
 #[inline]
 fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
-    string.push_str(c.encode_utf8(buf));
+    unsafe {
+        let vec = string.as_mut_vec();
+        for b in c.encode_utf8(buf).as_bytes() {
+            vec.push(*b);
+        }
+    }
 }
+
+// Push a char to a String using a buffer to encode utf8.
+//
+// This is much faster for multi-byte chars (like zalgo chars) than `push`.
+// #[inline]
+// fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
+// string.push_str(c.encode_utf8(buf));
+// }
 
 #[cfg(test)]
 mod test {
