@@ -72,33 +72,70 @@ impl ZalgoBuilder {
         let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
         let estimated_len = input_len * bytes_per_char;
 
-        let mut ret = String::with_capacity(estimated_len);
+        // let mut ret = String::with_capacity(estimated_len);
+        let mut ret = Vec::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
-            ret.push(c);
+            if c.len_utf8() == 1 {
+                ret.push(c as u8);
+            } else {
+                for b in c.encode_utf8(&mut push_buf).as_bytes() {
+                    ret.push(*b);
+                }
+            }
 
             for _ in 0..up_num {
+                /*
                 let c = *self::chars::ZALGO_UP
                     .choose(&mut rng)
                     .expect("`ZALGO_UP` is empty");
                 string_push_buf(&mut ret, &mut push_buf, c);
+                */
+                let bytes = *self::chars::ZALGO_UP_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_UP_ENCODED` is empty");
+                for b in bytes {
+                    ret.push(b);
+                }
             }
 
             for _ in 0..mid_num {
+                /*
                 let c = *self::chars::ZALGO_MID
                     .choose(&mut rng)
                     .expect("`ZALGO_MID` is empty");
                 string_push_buf(&mut ret, &mut push_buf, c);
+                */
+                let bytes = *self::chars::ZALGO_MID_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_MID_ENCODED` is empty");
+                for b in bytes {
+                    ret.push(b);
+                }
             }
 
             for _ in 0..down_num {
+                let bytes = *self::chars::ZALGO_DOWN_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_DOWN_ENCODED` is empty"); 
+                for b in bytes {
+                    ret.push(b);
+                }
+                /*
                 let c = *self::chars::ZALGO_DOWN
                     .choose(&mut rng)
                     .expect("`ZALGO_DOWN` is empty");
                 string_push_buf(&mut ret, &mut push_buf, c);
+                */
             }
         }
 
-        ret
+        #[cfg(not(feature = "no-unsafe"))]
+        unsafe {
+            String::from_utf8_unchecked(ret)
+        }
+
+        #[cfg(feature = "no-unsafe")]
+        String::from_utf8(ret).expect("vec should be utf8")
     }
 }
 
@@ -114,6 +151,7 @@ pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
 }
 
+/*
 /// Push a char to a String using a buffer to encode utf8.
 ///
 /// This is much faster for multi-byte chars (like zalgo chars) than `push`.
@@ -148,6 +186,7 @@ fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
 fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
     string.push_str(c.encode_utf8(buf));
 }
+*/
 
 #[cfg(test)]
 mod test {

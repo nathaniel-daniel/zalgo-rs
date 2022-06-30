@@ -4,7 +4,7 @@ import itertools
 import sympy
 import sympy.logic
 import os
-
+	
 def write_char_array(file, name, char_array):
 	file.write(f'pub(crate) const {name}: &[char] = &[\n')
 	for ch in char_array:
@@ -12,14 +12,22 @@ def write_char_array(file, name, char_array):
 		file.write(f'    \'\\u{{{codepoint:04X}}}\', // {ch}\n')
 	file.write(f'];\n\n')
 	
+def write_encoded_char_array(file, name, char_array):
+	file.write(f'pub(crate) const {name}: &[[u8; 2]] = &[\n')
+	for ch in char_array:
+		utf8_bytes = ch.encode('utf-8')
+		array = ', '.join(map(lambda b: f'0x{b:02X}', utf8_bytes))
+		file.write(f'    [{array}], // {ch}\n')
+	file.write(f'];\n\n')
+	
 def write_is_zalgo_char_fn(file, bitmasks, min_zalgo_char, max_zalgo_char):
 	file.write('/// Check if a given char is a zalgo char.\n')
 	file.write('pub(crate) fn is_zalgo_char(c: char) -> bool {\n')
 	file.write('    let c = u32::from(c);\n\n')
 	
-	file.write(f'if !({ord(min_zalgo_char)}..({ord(max_zalgo_char)} + 1)).contains(&c) {{\n')
-	file.write('return false;\n')
-	file.write('}\n\n')
+	file.write(f'    if !({ord(min_zalgo_char)}..({ord(max_zalgo_char)} + 1)).contains(&c) {{\n')
+	file.write('        return false;\n')
+	file.write('    }\n\n')
 	
 	for i, (pos_bitmask, neg_bitmask) in enumerate(bitmasks):
 		file.write(f'    let case_{i} = c & 0b{pos_bitmask} == 0b{pos_bitmask} && c & 0b{neg_bitmask} == 0;\n')
@@ -122,11 +130,20 @@ def main():
 		rust_chars_file.write('/// Up zalgo chars\n')
 		write_char_array(rust_chars_file, 'ZALGO_UP', zalgo_char_data_up)
 		
+		rust_chars_file.write('/// Encoded up zalgo chars\n')
+		write_encoded_char_array(rust_chars_file, 'ZALGO_UP_ENCODED', zalgo_char_data_up)
+		
 		rust_chars_file.write('/// Down zalgo chars\n')
 		write_char_array(rust_chars_file, 'ZALGO_DOWN', zalgo_char_data_down)
 		
+		rust_chars_file.write('/// Encoded down zalgo chars\n')
+		write_encoded_char_array(rust_chars_file, 'ZALGO_DOWN_ENCODED', zalgo_char_data_down)
+		
 		rust_chars_file.write('/// Mid zalgo chars\n')
 		write_char_array(rust_chars_file, 'ZALGO_MID', zalgo_char_data_mid)
+		
+		rust_chars_file.write('/// Encoded mid zalgo chars\n')
+		write_encoded_char_array(rust_chars_file, 'ZALGO_MID_ENCODED', zalgo_char_data_mid)
 		
 		write_is_zalgo_char_fn(rust_chars_file, bitmasks, min_zalgo_char, max_zalgo_char)
 		

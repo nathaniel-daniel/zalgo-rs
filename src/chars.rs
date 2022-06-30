@@ -1,4 +1,4 @@
-// Generated on 2022-06-29 21:40:57.471042 with `./scripts/build-char-tables.py`
+// Generated on 2022-06-29 22:07:53.166453 with `./scripts/build-char-tables.py`
 
 /// Up zalgo chars
 pub(crate) const ZALGO_UP: &[char] = &[
@@ -54,6 +54,60 @@ pub(crate) const ZALGO_UP: &[char] = &[
     '\u{036F}', // ͯ
 ];
 
+/// Encoded up zalgo chars
+pub(crate) const ZALGO_UP_ENCODED: &[[u8; 2]] = &[
+    [0xCC, 0x80], // ̀
+    [0xCC, 0x81], // ́
+    [0xCC, 0x82], // ̂
+    [0xCC, 0x83], // ̃
+    [0xCC, 0x84], // ̄
+    [0xCC, 0x85], // ̅
+    [0xCC, 0x86], // ̆
+    [0xCC, 0x87], // ̇
+    [0xCC, 0x88], // ̈
+    [0xCC, 0x89], // ̉
+    [0xCC, 0x8A], // ̊
+    [0xCC, 0x8B], // ̋
+    [0xCC, 0x8C], // ̌
+    [0xCC, 0x8D], // ̍
+    [0xCC, 0x8E], // ̎
+    [0xCC, 0x8F], // ̏
+    [0xCC, 0x90], // ̐
+    [0xCC, 0x91], // ̑
+    [0xCC, 0x92], // ̒
+    [0xCC, 0x93], // ̓
+    [0xCC, 0x94], // ̔
+    [0xCC, 0x9A], // ̚
+    [0xCC, 0xBD], // ̽
+    [0xCC, 0xBE], // ̾
+    [0xCC, 0xBF], // ̿
+    [0xCD, 0x82], // ͂
+    [0xCD, 0x83], // ̓
+    [0xCD, 0x84], // ̈́
+    [0xCD, 0x86], // ͆
+    [0xCD, 0x8A], // ͊
+    [0xCD, 0x8B], // ͋
+    [0xCD, 0x8C], // ͌
+    [0xCD, 0x90], // ͐
+    [0xCD, 0x91], // ͑
+    [0xCD, 0x92], // ͒
+    [0xCD, 0x97], // ͗
+    [0xCD, 0x9B], // ͛
+    [0xCD, 0xA3], // ͣ
+    [0xCD, 0xA4], // ͤ
+    [0xCD, 0xA5], // ͥ
+    [0xCD, 0xA6], // ͦ
+    [0xCD, 0xA7], // ͧ
+    [0xCD, 0xA8], // ͨ
+    [0xCD, 0xA9], // ͩ
+    [0xCD, 0xAA], // ͪ
+    [0xCD, 0xAB], // ͫ
+    [0xCD, 0xAC], // ͬ
+    [0xCD, 0xAD], // ͭ
+    [0xCD, 0xAE], // ͮ
+    [0xCD, 0xAF], // ͯ
+];
+
 /// Down zalgo chars
 pub(crate) const ZALGO_DOWN: &[char] = &[
     '\u{0316}', // ̖
@@ -98,6 +152,50 @@ pub(crate) const ZALGO_DOWN: &[char] = &[
     '\u{035A}', // ͚
 ];
 
+/// Encoded down zalgo chars
+pub(crate) const ZALGO_DOWN_ENCODED: &[[u8; 2]] = &[
+    [0xCC, 0x96], // ̖
+    [0xCC, 0x97], // ̗
+    [0xCC, 0x98], // ̘
+    [0xCC, 0x99], // ̙
+    [0xCC, 0x9C], // ̜
+    [0xCC, 0x9D], // ̝
+    [0xCC, 0x9E], // ̞
+    [0xCC, 0x9F], // ̟
+    [0xCC, 0xA0], // ̠
+    [0xCC, 0xA3], // ̣
+    [0xCC, 0xA4], // ̤
+    [0xCC, 0xA5], // ̥
+    [0xCC, 0xA6], // ̦
+    [0xCC, 0xA9], // ̩
+    [0xCC, 0xAA], // ̪
+    [0xCC, 0xAB], // ̫
+    [0xCC, 0xAC], // ̬
+    [0xCC, 0xAD], // ̭
+    [0xCC, 0xAE], // ̮
+    [0xCC, 0xAF], // ̯
+    [0xCC, 0xB0], // ̰
+    [0xCC, 0xB1], // ̱
+    [0xCC, 0xB2], // ̲
+    [0xCC, 0xB3], // ̳
+    [0xCC, 0xB9], // ̹
+    [0xCC, 0xBA], // ̺
+    [0xCC, 0xBB], // ̻
+    [0xCC, 0xBC], // ̼
+    [0xCD, 0x85], // ͅ
+    [0xCD, 0x87], // ͇
+    [0xCD, 0x88], // ͈
+    [0xCD, 0x89], // ͉
+    [0xCD, 0x8D], // ͍
+    [0xCD, 0x8E], // ͎
+    [0xCD, 0x93], // ͓
+    [0xCD, 0x94], // ͔
+    [0xCD, 0x95], // ͕
+    [0xCD, 0x96], // ͖
+    [0xCD, 0x99], // ͙
+    [0xCD, 0x9A], // ͚
+];
+
 /// Mid zalgo chars
 pub(crate) const ZALGO_MID: &[char] = &[
     '\u{0315}', // ̕
@@ -125,6 +223,33 @@ pub(crate) const ZALGO_MID: &[char] = &[
     '\u{0489}', // ҉
 ];
 
+/// Encoded mid zalgo chars
+pub(crate) const ZALGO_MID_ENCODED: &[[u8; 2]] = &[
+    [0xCC, 0x95], // ̕
+    [0xCC, 0x9B], // ̛
+    [0xCC, 0xA1], // ̡
+    [0xCC, 0xA2], // ̢
+    [0xCC, 0xA7], // ̧
+    [0xCC, 0xA8], // ̨
+    [0xCC, 0xB4], // ̴
+    [0xCC, 0xB5], // ̵
+    [0xCC, 0xB6], // ̶
+    [0xCC, 0xB7], // ̷
+    [0xCC, 0xB8], // ̸
+    [0xCD, 0x80], // ̀
+    [0xCD, 0x81], // ́
+    [0xCD, 0x8F], // ͏
+    [0xCD, 0x98], // ͘
+    [0xCD, 0x9C], // ͜
+    [0xCD, 0x9D], // ͝
+    [0xCD, 0x9E], // ͞
+    [0xCD, 0x9F], // ͟
+    [0xCD, 0xA0], // ͠
+    [0xCD, 0xA1], // ͡
+    [0xCD, 0xA2], // ͢
+    [0xD2, 0x89], // ҉
+];
+
 /// Check if a given char is a zalgo char.
 pub(crate) fn is_zalgo_char(c: char) -> bool {
     let c = u32::from(c);
@@ -133,14 +258,10 @@ pub(crate) fn is_zalgo_char(c: char) -> bool {
         return false;
     }
 
-    let case_0 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000
-        && c & 0b11111111111111111111110010010000 == 0;
-    let case_1 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000
-        && c & 0b11111111111111111111110010100000 == 0;
-    let case_2 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000
-        && c & 0b11111111111111111111110011000000 == 0;
-    let case_3 = c & 0b00000000000000000000010010001001 == 0b00000000000000000000010010001001
-        && c & 0b11111111111111111111101101110110 == 0;
+    let case_0 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000 && c & 0b11111111111111111111110010010000 == 0;
+    let case_1 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000 && c & 0b11111111111111111111110010100000 == 0;
+    let case_2 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000 && c & 0b11111111111111111111110011000000 == 0;
+    let case_3 = c & 0b00000000000000000000010010001001 == 0b00000000000000000000010010001001 && c & 0b11111111111111111111101101110110 == 0;
 
     case_0 || case_1 || case_2 || case_3
 }
