@@ -63,11 +63,10 @@ impl ZalgoBuilder {
         let down_num = self.down.generate_num(&mut rng);
 
         // Assuming average char len is 2 bytes (TODO: Check this).
+        // input_len  * (1 + up + down + mid)
         let input_len = input.len();
-        let estimated_len = (input_len * up_num * 2)
-            + (input_len * mid_num * 2)
-            + (input_len * down_num * 2)
-            + input_len;
+        let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
+        let estimated_len = input_len * bytes_per_char;
 
         let mut ret = String::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
