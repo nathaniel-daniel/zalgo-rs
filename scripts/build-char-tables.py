@@ -12,6 +12,27 @@ def write_char_array(file, name, char_array):
 		file.write(f'    \'\\u{{{codepoint:04X}}}\', // {ch}\n')
 	file.write(f'];\n\n')
 	
+def write_is_zalgo_char_fn(file, bitmasks, min_zalgo_char, max_zalgo_char):
+	file.write('/// Check if a given char is a zalgo char.\n')
+	file.write('pub(crate) fn is_zalgo_char(c: char) -> bool {\n')
+	file.write('    let c = u32::from(c);\n\n')
+	
+	file.write(f'if !({ord(min_zalgo_char)}..({ord(max_zalgo_char)} + 1)).contains(&c) {{\n')
+	file.write('return false;\n')
+	file.write('}\n\n')
+	
+	for i, (pos_bitmask, neg_bitmask) in enumerate(bitmasks):
+		file.write(f'    let case_{i} = c & 0b{pos_bitmask} == 0b{pos_bitmask} && c & 0b{neg_bitmask} == 0;\n')
+	file.write('\n')
+		
+	file.write('    ')
+	for i in range(len(bitmasks)):
+		file.write(f'case_{i}')
+		if i + 1 < len(bitmasks):
+			file.write(' || ')
+	file.write('\n')
+	file.write('}')
+	
 def int_to_bits(n):
 	assert(n >= 0)
 	
@@ -21,18 +42,8 @@ def int_to_bits(n):
 		n >>= 1
 		
 	return bits
-
-def main():
-	zalgo_char_data = None
-	with open('zalgo-char-data.toml', 'rb') as file:
-		zalgo_char_data = tomllib.load(file)
-	zalgo_char_data_up = zalgo_char_data['up']
-	zalgo_char_data_up.sort()
-	zalgo_char_data_down = zalgo_char_data['down']
-	zalgo_char_data_down.sort()
-	zalgo_char_data_mid = zalgo_char_data['mid']
-	zalgo_char_data_mid.sort()
 	
+def generate_zalgo_char_bitmasks(zalgo_char_data_up, zalgo_char_data_down, zalgo_char_data_mid):
 	char_map = dict()
 	for ch in itertools.chain(zalgo_char_data_up, zalgo_char_data_down, zalgo_char_data_mid):
 		assert(ord(ch) < 0xFFFF)
@@ -88,7 +99,22 @@ def main():
 		
 		bitmasks.append((pos_bit_str, neg_bit_str))
 		
-	# print(bitmasks)
+	return bitmasks
+
+def main():
+	zalgo_char_data = None
+	with open('zalgo-char-data.toml', 'rb') as file:
+		zalgo_char_data = tomllib.load(file)
+	zalgo_char_data_up = zalgo_char_data['up']
+	zalgo_char_data_up.sort()
+	zalgo_char_data_down = zalgo_char_data['down']
+	zalgo_char_data_down.sort()
+	zalgo_char_data_mid = zalgo_char_data['mid']
+	zalgo_char_data_mid.sort()
+	
+	min_zalgo_char = min(itertools.chain(zalgo_char_data_up, zalgo_char_data_down, zalgo_char_data_mid), key=ord)
+	max_zalgo_char = max(itertools.chain(zalgo_char_data_up, zalgo_char_data_down, zalgo_char_data_mid), key=ord)
+	bitmasks = generate_zalgo_char_bitmasks(zalgo_char_data_up, zalgo_char_data_down, zalgo_char_data_mid)
 	
 	with open('src/chars.rs.part', 'w', encoding="utf-8") as rust_chars_file:
 		rust_chars_file.write(f'// Generated on {datetime.datetime.now()} with `./scripts/build-char-tables.py`\n\n')
@@ -102,21 +128,7 @@ def main():
 		rust_chars_file.write('/// Mid zalgo chars\n')
 		write_char_array(rust_chars_file, 'ZALGO_MID', zalgo_char_data_mid)
 		
-		rust_chars_file.write('/// Check if a given char is a zalgo char.\n')
-		rust_chars_file.write('pub(crate) fn is_zalgo_char(c: char) -> bool {\n')
-		rust_chars_file.write('    let c = u32::from(c);\n\n')
-		for i, (pos_bitmask, neg_bitmask) in enumerate(bitmasks):
-			rust_chars_file.write(f'    let case_{i} = c & 0b{pos_bitmask} == 0b{pos_bitmask} && c & 0b{neg_bitmask} == 0;\n')
-		rust_chars_file.write('\n')
-		
-		rust_chars_file.write('    ')
-		for i in range(len(bitmasks)):
-			rust_chars_file.write(f'case_{i}')
-			if i + 1 < len(bitmasks):
-				rust_chars_file.write(' || ')
-		rust_chars_file.write('\n')
-		
-		rust_chars_file.write('}')
+		write_is_zalgo_char_fn(rust_chars_file, bitmasks, min_zalgo_char, max_zalgo_char)
 		
 	os.replace('src/chars.rs.part', 'src/chars.rs')
 	

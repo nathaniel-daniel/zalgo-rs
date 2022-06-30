@@ -1,4 +1,4 @@
-// Generated on 2022-06-28 21:32:20.669589 with `./scripts/build-char-tables.py`
+// Generated on 2022-06-29 21:40:57.471042 with `./scripts/build-char-tables.py`
 
 /// Up zalgo chars
 pub(crate) const ZALGO_UP: &[char] = &[
@@ -128,6 +128,10 @@ pub(crate) const ZALGO_MID: &[char] = &[
 /// Check if a given char is a zalgo char.
 pub(crate) fn is_zalgo_char(c: char) -> bool {
     let c = u32::from(c);
+
+    if !(768..(1161 + 1)).contains(&c) {
+        return false;
+    }
 
     let case_0 = c & 0b00000000000000000000001100000000 == 0b00000000000000000000001100000000
         && c & 0b11111111111111111111110010010000 == 0;
