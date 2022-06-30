@@ -128,18 +128,21 @@ def main():
 		rust_chars_file.write(f'// Generated on {datetime.datetime.now()} with `./scripts/build-char-tables.py`\n\n')
 		
 		rust_chars_file.write('/// Up zalgo chars\n')
+		rust_chars_file.write('#[cfg(test)]\n')
 		write_char_array(rust_chars_file, 'ZALGO_UP', zalgo_char_data_up)
 		
 		rust_chars_file.write('/// Encoded up zalgo chars\n')
 		write_encoded_char_array(rust_chars_file, 'ZALGO_UP_ENCODED', zalgo_char_data_up)
 		
 		rust_chars_file.write('/// Down zalgo chars\n')
+		rust_chars_file.write('#[cfg(test)]\n')
 		write_char_array(rust_chars_file, 'ZALGO_DOWN', zalgo_char_data_down)
 		
 		rust_chars_file.write('/// Encoded down zalgo chars\n')
 		write_encoded_char_array(rust_chars_file, 'ZALGO_DOWN_ENCODED', zalgo_char_data_down)
 		
 		rust_chars_file.write('/// Mid zalgo chars\n')
+		rust_chars_file.write('#[cfg(test)]\n')
 		write_char_array(rust_chars_file, 'ZALGO_MID', zalgo_char_data_mid)
 		
 		rust_chars_file.write('/// Encoded mid zalgo chars\n')

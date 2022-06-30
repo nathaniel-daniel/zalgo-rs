@@ -72,7 +72,6 @@ impl ZalgoBuilder {
         let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
         let estimated_len = input_len * bytes_per_char;
 
-        // let mut ret = String::with_capacity(estimated_len);
         let mut ret = Vec::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
             if c.len_utf8() == 1 {
@@ -84,12 +83,6 @@ impl ZalgoBuilder {
             }
 
             for _ in 0..up_num {
-                /*
-                let c = *self::chars::ZALGO_UP
-                    .choose(&mut rng)
-                    .expect("`ZALGO_UP` is empty");
-                string_push_buf(&mut ret, &mut push_buf, c);
-                */
                 let bytes = *self::chars::ZALGO_UP_ENCODED
                     .choose(&mut rng)
                     .expect("`ZALGO_UP_ENCODED` is empty");
@@ -99,12 +92,6 @@ impl ZalgoBuilder {
             }
 
             for _ in 0..mid_num {
-                /*
-                let c = *self::chars::ZALGO_MID
-                    .choose(&mut rng)
-                    .expect("`ZALGO_MID` is empty");
-                string_push_buf(&mut ret, &mut push_buf, c);
-                */
                 let bytes = *self::chars::ZALGO_MID_ENCODED
                     .choose(&mut rng)
                     .expect("`ZALGO_MID_ENCODED` is empty");
@@ -116,16 +103,10 @@ impl ZalgoBuilder {
             for _ in 0..down_num {
                 let bytes = *self::chars::ZALGO_DOWN_ENCODED
                     .choose(&mut rng)
-                    .expect("`ZALGO_DOWN_ENCODED` is empty"); 
+                    .expect("`ZALGO_DOWN_ENCODED` is empty");
                 for b in bytes {
                     ret.push(b);
                 }
-                /*
-                let c = *self::chars::ZALGO_DOWN
-                    .choose(&mut rng)
-                    .expect("`ZALGO_DOWN` is empty");
-                string_push_buf(&mut ret, &mut push_buf, c);
-                */
             }
         }
 
@@ -150,43 +131,6 @@ impl Default for ZalgoBuilder {
 pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
 }
-
-/*
-/// Push a char to a String using a buffer to encode utf8.
-///
-/// This is much faster for multi-byte chars (like zalgo chars) than `push`.
-/// This is because Rust will emit a `memcpy` for multi-byte chars when pushing them to the `String`,
-/// which is incredibly inefficient.
-///
-/// Instead, we manually push the UTF8 bytes 1 by 1 to the inner `Vec`.
-/// It is impossible to implement this in safe code.
-#[cfg(not(feature = "no-unsafe"))]
-#[inline]
-fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
-    // Safety:
-    // Only UTF8 bytes are appended to the Vec.
-    unsafe {
-        let vec = string.as_mut_vec();
-        for b in c.encode_utf8(buf).as_bytes() {
-            vec.push(*b);
-        }
-    }
-}
-
-/// Push a char to a String using a buffer to encode utf8.
-///
-/// This is much faster for multi-byte chars (like zalgo chars) than `push`.
-/// This is because Rust will emit a `memcpy` for multi-byte chars when pushing them to the `String`,
-/// which is incredibly inefficient.
-///
-/// We cannot safely avoid this `memcpy` in safe code,
-/// so we mitigate it by assuming all chars passed to this function are multi-byte.
-#[cfg(feature = "no-unsafe")]
-#[inline]
-fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
-    string.push_str(c.encode_utf8(buf));
-}
-*/
 
 #[cfg(test)]
 mod test {
