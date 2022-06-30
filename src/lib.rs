@@ -57,6 +57,7 @@ impl ZalgoBuilder {
 
     /// Zalgoify a string
     pub fn zalgoify(&self, input: &str) -> String {
+        let mut push_buf = [0; 4];
         let mut rng = rand::rngs::SmallRng::from_entropy();
         let up_num = self.up.generate_num(&mut rng);
         let mid_num = self.mid.generate_num(&mut rng);
@@ -71,25 +72,26 @@ impl ZalgoBuilder {
         let mut ret = String::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
             ret.push(c);
+            
             for _ in 0..up_num {
                 let c = *self::chars::ZALGO_UP
                     .choose(&mut rng)
                     .expect("`ZALGO_UP` is empty");
-                ret.push(c);
+                string_push_buf(&mut ret, &mut push_buf, c);
             }
 
             for _ in 0..mid_num {
                 let c = *self::chars::ZALGO_MID
                     .choose(&mut rng)
                     .expect("`ZALGO_MID` is empty");
-                ret.push(c);
+                string_push_buf(&mut ret, &mut push_buf, c);
             }
 
             for _ in 0..down_num {
                 let c = *self::chars::ZALGO_DOWN
                     .choose(&mut rng)
                     .expect("`ZALGO_DOWN` is empty");
-                ret.push(c);
+                string_push_buf(&mut ret, &mut push_buf, c);
             }
         }
 
@@ -106,6 +108,12 @@ impl Default for ZalgoBuilder {
 /// Zalgoify the input using default settings.
 pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
+}
+
+/// Push a char to a String using a buffer to encode utf8.
+#[inline]
+fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
+    string.push_str(c.encode_utf8(buf));
 }
 
 #[cfg(test)]
