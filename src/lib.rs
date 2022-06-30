@@ -64,8 +64,10 @@ impl ZalgoBuilder {
 
         // Assuming average char len is 2 bytes (TODO: Check this).
         let input_len = input.len();
-        let estimated_len =
-            (input_len * up_num * 2) + (input_len * mid_num * 2) + (input_len * down_num * 2);
+        let estimated_len = (input_len * up_num * 2)
+            + (input_len * mid_num * 2)
+            + (input_len * down_num * 2)
+            + input_len;
 
         let mut ret = String::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
