@@ -1,4 +1,4 @@
-#![cfg_attr(feature="no-unsafe", forbid(unsafe_code))]
+#![cfg_attr(feature = "no-unsafe", forbid(unsafe_code))]
 
 /// zalgo chars
 mod chars;
@@ -28,6 +28,7 @@ pub struct ZalgoBuilder {
 
 impl ZalgoBuilder {
     /// Make a new [`ZalgoBuilder`].
+    #[inline]
     pub fn new() -> Self {
         Self {
             up: RandOrStatic::Rand { start: 0, end: 8 },
@@ -108,6 +109,7 @@ impl Default for ZalgoBuilder {
 }
 
 /// Zalgoify the input using default settings.
+#[inline]
 pub fn zalgoify(input: &str) -> String {
     ZalgoBuilder::new().zalgoify(input)
 }
@@ -115,9 +117,16 @@ pub fn zalgoify(input: &str) -> String {
 /// Push a char to a String using a buffer to encode utf8.
 ///
 /// This is much faster for multi-byte chars (like zalgo chars) than `push`.
+/// This is because Rust will emit a `memcpy` for multi-byte chars when pushing them to the `String`,
+/// which is incredibly inefficient.
+///
+/// Instead, we manually push the UTF8 bytes 1 by 1 to the inner `Vec`.
+/// It is impossible to implement this in safe code.
 #[cfg(not(feature = "no-unsafe"))]
 #[inline]
 fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
+    // Safety:
+    // Only UTF8 bytes are appended to the Vec.
     unsafe {
         let vec = string.as_mut_vec();
         for b in c.encode_utf8(buf).as_bytes() {
@@ -126,13 +135,18 @@ fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
     }
 }
 
-// Push a char to a String using a buffer to encode utf8.
-//
-// This is much faster for multi-byte chars (like zalgo chars) than `push`.
+/// Push a char to a String using a buffer to encode utf8.
+///
+/// This is much faster for multi-byte chars (like zalgo chars) than `push`.
+/// This is because Rust will emit a `memcpy` for multi-byte chars when pushing them to the `String`,
+/// which is incredibly inefficient.
+///
+/// We cannot safely avoid this `memcpy` in safe code,
+/// so we mitigate it by assuming all chars passed to this function are multi-byte.
 #[cfg(feature = "no-unsafe")]
 #[inline]
 fn string_push_buf(string: &mut String, buf: &mut [u8], c: char) {
-string.push_str(c.encode_utf8(buf));
+    string.push_str(c.encode_utf8(buf));
 }
 
 #[cfg(test)]
