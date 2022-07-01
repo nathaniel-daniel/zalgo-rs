@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["RandOrStatic","A random value or a static value"]],"fn":[["zalgoify","Zalgoify the input using default settings."]],"struct":[["ZalgoBuilder","A builder for a zalgoifier"]]});

@@ -1,0 +1,3 @@
+(function() {var implementors = {};
+implementors["zalgo"] = [{"text":"impl Freeze for <a class=\"enum\" href=\"zalgo/enum.RandOrStatic.html\" title=\"enum zalgo::RandOrStatic\">RandOrStatic</a>","synthetic":true,"types":["zalgo::rand_or_static::RandOrStatic"]},{"text":"impl Freeze for <a class=\"struct\" href=\"zalgo/struct.ZalgoBuilder.html\" title=\"struct zalgo::ZalgoBuilder\">ZalgoBuilder</a>","synthetic":true,"types":["zalgo::ZalgoBuilder"]}];
+if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
