@@ -9,4 +9,5 @@ rand = { version = "0.8.5", default-features = false, features = [ "small_rng", 
 
 [features]
 default = [ "no-unsafe" ]
+nightly = [ "rand/nightly" ]
 no-unsafe = []

@@ -66,7 +66,7 @@ impl ZalgoBuilder {
         let mid_num = self.mid.generate_num(&mut rng);
         let down_num = self.down.generate_num(&mut rng);
 
-        // Assuming average char len is 2 bytes (TODO: Check this).
+        // Zalgo chars are 2 bytes long.
         // input_len  * (1 + up + down + mid)
         let input_len = input.len();
         let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
