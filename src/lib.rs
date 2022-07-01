@@ -72,8 +72,13 @@ impl ZalgoBuilder {
         let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
         let estimated_len = input_len * bytes_per_char;
 
+        // We use a vec as the buffer instead of a string.
+        // This is because appending a `char` to a string appears to generate a `memcpy`.
+        // We avoid this by pushing bytes indiviudally to a buffer, then converting it into a string.
         let mut ret = Vec::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
+            // TODO: Investigate whether always using `encode_utf8` is fast enough here.
+            // We already avoid the `memcpy` by avoiding extend.
             if c.len_utf8() == 1 {
                 ret.push(c as u8);
             } else {
