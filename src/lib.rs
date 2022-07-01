@@ -61,13 +61,13 @@ impl ZalgoBuilder {
     /// Zalgoify a string
     pub fn zalgoify(&self, input: &str) -> String {
         let mut push_buf = [0; 4];
-        
+
         // TODO: We currently use a single simple rng.
         // A SIMD based generator will perform better here since we need large numbers of mediocre random numbers.
         // Essentially, we would need to implement a multi-prng that is driven by SIMD, allowing for the parallel generation of random numbers.
         // This is worth it, as random number generation currently takes about half of this function's runtime.
         let mut rng = rand::rngs::SmallRng::from_entropy();
-        
+
         let up_num = self.up.generate_num(&mut rng);
         let mid_num = self.mid.generate_num(&mut rng);
         let down_num = self.down.generate_num(&mut rng);
