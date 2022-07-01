@@ -1,125 +1,224 @@
+#![cfg_attr(feature = "no-unsafe", forbid(unsafe_code))]
+
+/// zalgo chars
 mod chars;
 
+/// [`RandOrStatic`] type
+mod rand_or_static;
+
+use self::chars::is_zalgo_char;
+pub use self::rand_or_static::RandOrStatic;
 use rand::{
-    rngs::ThreadRng,
     seq::SliceRandom,
-    Rng,
+    SeedableRng,
 };
 
-/// Check if a given char is a zalgo char.
-fn is_zalgo_char(c: char) -> bool {
-    crate::chars::ZALGO_UP
-        .iter()
-        .chain(chars::ZALGO_DOWN.iter())
-        .chain(chars::ZALGO_MID.iter())
-        .any(|&el| el == c)
+/// A builder for a zalgoifier
+#[derive(Debug)]
+pub struct ZalgoBuilder {
+    /// The up limit
+    pub up: RandOrStatic,
+
+    /// The down limit
+    pub down: RandOrStatic,
+
+    /// The mid limit
+    pub mid: RandOrStatic,
 }
 
-/// Zalgoify the input using default settings
-pub fn zalgoify(input: &str) -> String {
-    Zalgoifier::new().zalgoify(input)
-}
-
-pub struct Zalgoifier {
-    rng: ThreadRng,
-    up: RandOrStatic,
-    down: RandOrStatic,
-    mid: RandOrStatic,
-}
-
-impl Zalgoifier {
+impl ZalgoBuilder {
+    /// Make a new [`ZalgoBuilder`].
+    #[inline]
     pub fn new() -> Self {
-        Zalgoifier {
-            rng: rand::thread_rng(),
-            up: RandOrStatic::Rand(8),
-            down: RandOrStatic::Rand(2),
-            mid: RandOrStatic::Rand(8),
+        Self {
+            up: RandOrStatic::Rand { start: 0, end: 8 },
+            down: RandOrStatic::Rand { start: 0, end: 2 },
+            mid: RandOrStatic::Rand { start: 0, end: 8 },
         }
     }
 
-    pub fn set_up(&mut self, up: RandOrStatic) {
-        self.up = up;
+    /// Set the up limits
+    #[inline]
+    pub fn set_up(&mut self, up: impl Into<RandOrStatic>) -> &mut Self {
+        self.up = up.into();
+        self
     }
 
-    pub fn set_down(&mut self, down: RandOrStatic) {
-        self.down = down;
+    /// Set the down limits
+    #[inline]
+    pub fn set_down(&mut self, down: impl Into<RandOrStatic>) -> &mut Self {
+        self.down = down.into();
+        self
     }
 
-    pub fn set_mid(&mut self, mid: RandOrStatic) {
-        self.mid = mid;
+    /// Set the mid limits
+    #[inline]
+    pub fn set_mid(&mut self, mid: impl Into<RandOrStatic>) -> &mut Self {
+        self.mid = mid.into();
+        self
     }
 
-    pub fn get_rand(&mut self, max: usize) -> usize {
-        self.rng.gen_range(0..max)
-    }
+    /// Zalgoify a string
+    pub fn zalgoify(&self, input: &str) -> String {
+        let mut push_buf = [0; 4];
 
-    fn get_rand_char(&mut self, zalgo_type: ZalgoType) -> char {
-        *zalgo_type.get_char_array().choose(&mut self.rng).unwrap()
-    }
+        // TODO: We currently use a single simple rng.
+        // A SIMD based generator will perform better here since we need large numbers of mediocre random numbers.
+        // Essentially, we would need to implement a multi-prng that is driven by SIMD, allowing for the parallel generation of random numbers.
+        // This is worth it, as random number generation currently takes about half of this function's runtime.
+        let mut rng = rand::rngs::SmallRng::from_entropy();
 
-    pub fn get_num(&mut self, val: RandOrStatic) -> usize {
-        match val {
-            RandOrStatic::Rand(n) => self.get_rand(n),
-            RandOrStatic::Static(n) => n,
-        }
-    }
+        let up_num = self.up.generate_num(&mut rng);
+        let mid_num = self.mid.generate_num(&mut rng);
+        let down_num = self.down.generate_num(&mut rng);
 
-    pub fn zalgoify(&mut self, input: &str) -> String {
-        let up_num = self.get_num(self.up);
-        let mid_num = self.get_num(self.mid);
-        let down_num = self.get_num(self.down);
+        // Zalgo chars are 2 bytes long.
+        // input_len  * (1 + up + down + mid)
+        let input_len = input.len();
+        let bytes_per_char = 1 + ((up_num + down_num + mid_num) * 2);
+        let estimated_len = input_len * bytes_per_char;
 
-        // TODO: This is in bytes. I should probably find the avergae length of a zalgo char and multiply it here.
-        let cap = input.len() * up_num + input.len() * mid_num + input.len() * down_num;
-
-        let mut ret = String::with_capacity(cap);
+        // We use a vec as the buffer instead of a string.
+        // This is because appending a `char` to a string appears to generate a `memcpy`.
+        // We avoid this by pushing bytes indiviudally to a buffer, then converting it into a string.
+        let mut ret = Vec::with_capacity(estimated_len);
         for c in input.chars().filter(|c| !is_zalgo_char(*c)) {
-            ret.push(c);
+            // TODO: Investigate whether always using `encode_utf8` is fast enough here.
+            // We already avoid the `memcpy` by avoiding extend.
+            if c.len_utf8() == 1 {
+                ret.push(c as u8);
+            } else {
+                for b in c.encode_utf8(&mut push_buf).as_bytes() {
+                    ret.push(*b);
+                }
+            }
+
             for _ in 0..up_num {
-                ret.push(self.get_rand_char(ZalgoType::Up));
+                let bytes = *self::chars::ZALGO_UP_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_UP_ENCODED` is empty");
+                for b in bytes {
+                    ret.push(b);
+                }
             }
 
             for _ in 0..mid_num {
-                ret.push(self.get_rand_char(ZalgoType::Mid));
+                let bytes = *self::chars::ZALGO_MID_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_MID_ENCODED` is empty");
+                for b in bytes {
+                    ret.push(b);
+                }
             }
 
             for _ in 0..down_num {
-                ret.push(self.get_rand_char(ZalgoType::Down));
+                let bytes = *self::chars::ZALGO_DOWN_ENCODED
+                    .choose(&mut rng)
+                    .expect("`ZALGO_DOWN_ENCODED` is empty");
+                for b in bytes {
+                    ret.push(b);
+                }
             }
         }
 
-        ret
+        #[cfg(not(feature = "no-unsafe"))]
+        unsafe {
+            String::from_utf8_unchecked(ret)
+        }
+
+        #[cfg(feature = "no-unsafe")]
+        String::from_utf8(ret).expect("vec should be utf8")
     }
 }
 
-impl Default for Zalgoifier {
+impl Default for ZalgoBuilder {
     fn default() -> Self {
         Self::new()
     }
 }
 
-/// A random value or a static value
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-pub enum RandOrStatic {
-    Rand(usize),
-    Static(usize),
+/// Zalgoify the input using default settings.
+#[inline]
+pub fn zalgoify(input: &str) -> String {
+    ZalgoBuilder::new().zalgoify(input)
 }
 
-/// The type of zalgo char
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-enum ZalgoType {
-    Up,
-    Down,
-    Mid,
-}
+#[cfg(test)]
+mod test {
+    use super::*;
+    use std::time::Instant;
 
-impl ZalgoType {
-    /// Get the char array for the given zalgo type.
-    fn get_char_array(self) -> &'static [char] {
-        match self {
-            ZalgoType::Up => chars::ZALGO_UP,
-            ZalgoType::Down => chars::ZALGO_DOWN,
-            ZalgoType::Mid => chars::ZALGO_MID,
+    /// Check if a given char is a zalgo char.
+    ///
+    /// This is an old impl
+    fn is_zalgo_char_version_2(c: char) -> bool {
+        if crate::chars::ZALGO_UP.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        if crate::chars::ZALGO_DOWN.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        if crate::chars::ZALGO_MID.binary_search(&c).is_ok() {
+            return true;
+        }
+
+        false
+    }
+
+    #[test]
+    fn basic_zalgoify_works() {
+        let ret = zalgoify("Hello World!");
+        println!("{}", ret);
+        assert!(!ret.is_empty());
+    }
+
+    #[test]
+    fn zalgoify_builder_works() {
+        let mut zalgo_builder = ZalgoBuilder::new();
+        zalgo_builder.set_up(0..100).set_down(0).set_mid(0);
+
+        let ret = zalgo_builder.zalgoify("Hello World!");
+
+        println!("{}", ret);
+        assert!(!ret.is_empty());
+    }
+
+    #[test]
+    fn zalgo_noop_works() {
+        let mut zalgo_builder = ZalgoBuilder::new();
+        zalgo_builder.set_up(0).set_down(0).set_mid(0);
+
+        let test = "Hello World!";
+        assert_eq!(test, zalgo_builder.zalgoify("Hello World!"));
+    }
+
+    #[test]
+    fn zalgo_bench() {
+        let data = "Hello World!".repeat(12);
+
+        let start = Instant::now();
+        zalgoify(&data);
+        let elapsed = start.elapsed();
+        println!("Time: {:?}", elapsed);
+    }
+
+    #[test]
+    fn test_is_zalgo_char() {
+        for i in 0..u32::MAX {
+            if let Ok(c) = char::try_from(i) {
+                let is_zalgo_char_version_2_result = is_zalgo_char_version_2(c);
+                let is_zalgo_char_result = is_zalgo_char(c);
+                assert!(
+                    is_zalgo_char_version_2_result == is_zalgo_char_result,
+                    "failed on {:x?} ({:b}), expected {}, got {}",
+                    c,
+                    u32::from(c),
+                    is_zalgo_char_version_2_result,
+                    is_zalgo_char_result,
+                );
+            }
         }
     }
 }
